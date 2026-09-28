@@ -69,6 +69,24 @@ def test_parse_tags_successfully():
         assert got == r, f"Failed on parsing {op.tag}, expected {r}, got {got}"
 
 
+def test_parse_leakage_detector_tag():
+    """Tests that the bare LEAKAGE_DETECTOR tag is accepted on a DETECTOR."""
+    circuit = stim.Circuit(
+        """
+    M 0
+    DETECTOR[LEAKAGE_DETECTOR] rec[-1]
+    H[LEAKAGE_DETECTOR] 0
+    """
+    )
+    assert ltp.parse_leakage_tag(circuit[1]) is None
+    with pytest.raises(ValueError, match="must be attached to one of"):
+        ltp.parse_leakage_tag(circuit[2])
+
+    circuit = stim.Circuit("I_ERROR[LEAKAGE_TRANSITION_1] 0")
+    with pytest.raises(ValueError, match="Malformed leakage tag structure"):
+        ltp.parse_leakage_tag(circuit[0])
+
+
 # ##############################################################################
 # Tests for expected failures
 # ##############################################################################

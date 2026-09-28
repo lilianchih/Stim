@@ -140,11 +140,15 @@ def parse_leakage_tag(op: stim.CircuitInstruction, simulator: Literal["flip", "t
     else:
         match = LEAKAGE_TAG_MATCH.fullmatch(tag)
         
-    if not match:
+    if match:
+        name = match.group("name")
+    elif tag == "LEAKAGE_DETECTOR":
+        # LEAKAGE_DETECTOR takes no arguments
+        name = tag
+    else:
         raise ValueError(f"Malformed leakage tag structure: {tag}")
-        
+
     # 2. Lookup definition
-    name = match.group("name")
     tag_def = TAG_REGISTRY.get(name)
     if not tag_def:
         raise ValueError(f"Unrecognised leakage tag name: {name}")
