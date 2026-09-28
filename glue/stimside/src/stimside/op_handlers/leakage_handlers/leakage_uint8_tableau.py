@@ -659,12 +659,13 @@ class CompiledLeakageUint8(CompiledOpHandler[TablesideSimulator]):
         # Reset the qubits in leaked states (>1), and apply X flips according to the specified probabilities
         target_leaked_idx = np.where(target_leakage_state > 1)[0]
         if len(target_leaked_idx) > 0:
+            leaked_qubits = np.array(targets)[target_leaked_idx]
             tss._do_bare_only_on_tableau(
-                self._construct_stim_instruction("R", target_leaked_idx)
+                self._construct_stim_instruction("R", leaked_qubits)
             )
             for n in range(2, np.max(target_leakage_state) + 1):
                 if n in target_leakage_state and n in params.prob_for_input_state:
-                    idx_n = target_leaked_idx[
+                    idx_n = leaked_qubits[
                         target_leakage_state[target_leaked_idx] == n
                     ]
                     tss._do_bare_only_on_tableau(

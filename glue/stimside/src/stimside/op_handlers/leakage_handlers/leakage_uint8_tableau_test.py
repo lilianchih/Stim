@@ -306,7 +306,26 @@ class TestCompiledLeakageUint8:
             tss._compiled_op_handler.state
             == np.array([0, 0, 2, 3])
             )
-        
+
+    def test_leakage_measurement_leaked_target_qubit_index(self):
+        # Qubit 7 is leaked and sits at position 1 in the target list; the leakage
+        # probability must apply to qubit 7, not to qubit 1.
+        for measure in [
+            "MPAD[LEAKAGE_MEASUREMENT: (1.0, 2) : 5 7 9] 0 0 0",
+            "M[LEAKAGE_PROJECTION_Z: (1.0, 2)] 5 7 9",
+        ]:
+            circuit = stim.Circuit(
+                f"""
+                R 1 5 7 9
+                I_ERROR[LEAKAGE_TRANSITION_1: (1.0, U-->2)] 7
+                {measure}
+                """
+            )
+            tss = self._get_simulator_for_circuit(circuit)
+            tss.run()
+            records = tss.get_final_measurement_records()
+            assert np.all(records == [0, 1, 0]), measure
+
     def test_conditional_ops(self):
        # Part a: Test universal conditioning on U
         circuit_a = stim.Circuit(
