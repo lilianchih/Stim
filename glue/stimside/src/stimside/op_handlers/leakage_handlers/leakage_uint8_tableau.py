@@ -58,6 +58,8 @@ class CompiledLeakageUint8(CompiledOpHandler[TablesideSimulator]):
     batch_size: int
     unconditional_condition_on_U: bool
 
+    # Leakage level per qubit: >= 2 is leaked, < 2 just means unleaked (0 is not |0>;
+    # the Z value is re-peeked from the tableau whenever it matters).
     state: NDArray[np.uint8] = dataclasses.field(init=False)
 
     ops_to_params: dict[stim.CircuitInstruction, LeakageParams]
@@ -336,11 +338,13 @@ class CompiledLeakageUint8(CompiledOpHandler[TablesideSimulator]):
                 input_state=input_state, num_samples=samples_to_take, np_rng=tss.np_rng
             ).astype(str)
 
-            was_unleaked = output_states == "U"
-            set_to_one = output_states == "1"
-            set_to_zero = output_states == "0"
+            # output == input is the "no transition" outcome: leave those qubits alone
+            no_transition = output_states == str(input_state)
+            was_unleaked = (output_states == "U") & ~no_transition
+            set_to_one = (output_states == "1") & ~no_transition
+            set_to_zero = (output_states == "0") & ~no_transition
 
-            output_states[was_unleaked] = 0
+            output_states[output_states == "U"] = 0
             # actually overwrite the leakage states
             output_states = output_states.astype(np.uint8)
 

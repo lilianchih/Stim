@@ -123,6 +123,23 @@ class TestCompiledLeakageUint8:
         assert np.any(records[:, :] == 0)
         assert np.any(records[:, :] == 1)
 
+    def test_leakage_transition_1_no_transition_leaves_qubit_alone(self):
+        # With p=0 every qubit takes the U-->U "no transition" outcome and must not be depolarized
+        circuit = stim.Circuit(
+            """
+            R 0
+            H 0
+            I_ERROR[LEAKAGE_TRANSITION_1: (0.0, U-->2)] 0
+            H 0
+            M 0
+            """
+            )
+        tss = self._get_simulator_for_circuit(circuit)
+        tss.run()
+        records = tss.get_final_measurement_records()
+        assert np.all(tss._compiled_op_handler.state[:] == 0)
+        assert np.all(records[:, 0] == 0)
+
     def test_leakage_transition_2(self):
         # Test case: (U, U) -> (L2, L3)
         circuit = stim.Circuit(
