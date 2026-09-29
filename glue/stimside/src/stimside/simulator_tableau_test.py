@@ -107,3 +107,24 @@ class TestFlipsideSimulator:
         assert tss.get_detector_flips().shape == (self.batch_size, circuit_num_detectors)
         assert tss.get_final_measurement_records().shape == (self.batch_size, circuit_num_measurements)
         assert tss.get_observable_flips().shape == (self.batch_size, circuit_num_observables)
+
+    def test_clear_resets_detection_events(self):
+        class NoopClearHandler(MockCompiledOpHandler):
+            def clear(self) -> None:
+                pass
+
+        circuit = stim.Circuit(
+            """
+            X_ERROR(0.5) 0
+            M 0
+            DETECTOR rec[-1]
+            OBSERVABLE_INCLUDE(0) rec[-1]
+        """
+        )
+        tss = TablesideSimulator(circuit=circuit, compiled_op_handler=NoopClearHandler())
+        results = set()
+        for _ in range(50):
+            tss.clear()
+            tss.run()
+            results.add(tuple(tss.get_detector_flips(append_observables=True)[0]))
+        assert results == {(False, False), (True, True)}

@@ -128,6 +128,11 @@ class TablesideSimulator:
         self._tableau_simulator = stim.TableauSimulator()
         self._new_circuit.clear()
         self._final_measurement_records = None
+        self._detector_flips = None
+        self._observable_flips = None
+        self._finished_running_circuit = False
+        if self._construct_reference_circuit:
+            self._new_reference_circuit.clear()
 
         self.qubit_coords: dict[int, list[float]] = {}
         self.qubit_tags: dict[int, str] = {}
